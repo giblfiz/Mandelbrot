@@ -30,8 +30,8 @@ $(document).ready(function(){
 	relX =  event.pageX - $(event.target).offset().left;
 	relY = event.pageY - $(event.target).offset().top;
 	
-	newX =  oldCenterX - relX + ($(event.target).width()/oldZoom); 
-	newY =  oldCenterY - relY + ($(event.target).height()/oldZoom); 
+	newX =  oldCenterX - relX + ($(event.target).width()/2); 
+	newY =  oldCenterY - relY + ($(event.target).height()/2); 
 
 //	if(event.metaKey){
 	    plotMandelbrot(canvas, newX, newY, oldZoom);
@@ -55,12 +55,22 @@ function plotMandelbrot(canvas, centerX, centerY, zoom){
     for(x= 1; x< sizeX; x+=1){
 	for(y= 1; y< sizeY ; y+=1){
 	    mbPixel(x,y,
-		    mandelbrotColor((x-centerX)/(sizeX) ,
-				    (y-centerY)/(sizeY) , 255), ctx);
+		    mandelbrotColor((x-centerX)/(sizeX *zoom) ,
+				    (y-centerY)/(sizeY *zoom ) , 255), ctx);
 	}
     }
     oldCenterY = centerY;
     oldCenterX = centerX;
+    crossHairs(ctx);
+}
+
+function crossHairs(ctx){
+    ctx.fillStyle= "rgb(200,0,0)";
+    var x, y;
+    for(x= 1; x< 300; x+=1){
+	ctx.fillRect(x, 150, 1, 1);
+	ctx.fillRect( 150, x, 1, 1);
+    }
 }
 
 //takes an X & a Y and a max Itteration Count
