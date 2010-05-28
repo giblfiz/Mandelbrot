@@ -1,0 +1,13 @@
+1) Unit tests? I'm not entirely sure how to do this
+2) nicer colors
+3) Multi-pass drawing for greater responsiveness (could do odd/even or many other things)
+4) Use canvas for quick-scaling and quick-movement
+5) make movement "dragable" rather than clickable
+6) Use BigInt library so its faster
+7) REFACTOR!!! 
+  --Clear out globals
+  --Clean up formulas
+  --JS lint
+  --use a closure for color interpreter
+8) make zoom&pan set and respect anchor tags (so views can be bookmarked)
+9) tune for speed
