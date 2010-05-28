@@ -7,21 +7,31 @@ $(document).ready(function(){
 	alert("Browser does not support Canvas");
     }
 
-    plotMandelbrot(canvas, 200, 200, oldZoom);
+    plotMandelbrot(canvas, 150, 150, oldZoom);
 
     $("#zoom2x").click(function(event){
-	plotMandelbrot(canvas, oldCenterX, oldCenterY, oldZoom *= 2 );
-	$("#info").html( "zoom at "  + oldZoom );
-	$("#info").append( "<BR> oldX "  + oldCenterX );
-	$("#info").append( "<BR> oldY "  + oldCenterY );
+	newZoom = oldZoom *2;
+	offsetX = ((oldCenterX * newZoom)-150)/oldZoom;
+	offsetY = ((oldCenterY * newZoom)-150)/oldZoom;
+	plotMandelbrot(canvas, offsetX, offsetY , newZoom );
+	oldZoom = newZoom;
+
+	$("#info").append( "<HR>zoom at "  + oldZoom );
+	$("#info").append( " : oldX "  + oldCenterX );
+	$("#info").append( " : oldY "  + oldCenterY );
 
     });
 
     $("#zoom1p").click(function(event){
-	plotMandelbrot(canvas, oldCenterX, oldCenterY, oldZoom += 1 );
-	$("#info").html( "zoom at "  + oldZoom );
-	$("#info").append( "<BR> oldX "  + oldCenterX );
-	$("#info").append( "<BR> oldY "  + oldCenterY );
+	newZoom = oldZoom + 1;
+	offsetX = ((oldCenterX * newZoom)-150)/oldZoom;
+	offsetY = ((oldCenterY * newZoom)-150)/oldZoom;
+	plotMandelbrot(canvas, offsetX, offsetY , newZoom );
+	oldZoom = newZoom;
+
+//	$("#info").append( "<HR>zoom at "  + oldZoom );
+//	$("#info").append( " : oldX "  + oldCenterX );
+//	$("#info").append( " : oldY "  + oldCenterY );
 
     });
 
@@ -33,15 +43,18 @@ $(document).ready(function(){
 	newX =  oldCenterX - relX + ($(event.target).width()/2); 
 	newY =  oldCenterY - relY + ($(event.target).height()/2); 
 
+	$("#info").append( "<HR>zoom at "  + oldZoom );
+	$("#info").append( " : X "  + newX );
+	$("#info").append( " : Y "  + newY );
 //	if(event.metaKey){
-	    plotMandelbrot(canvas, newX, newY, oldZoom);
+	plotMandelbrot(canvas, newX, newY, oldZoom);
 //	}else {
 //	    plotMandelbrot(canvas, newX, newY, oldZoom *= 1.5 );
 //	}
 
-	$("#info").html( "zoom at "  + oldZoom );
-	$("#info").append( "<BR> NewX "  + newX );
-	$("#info").append( "<BR> NewY "  + newY );
+//	$("#info").append( "zoom at "  + oldZoom );
+	//	$("#info").append( "<BR> NewX "  + newX );
+//	$("#info").append( "<BR> NewY "  + newY );
 
     })
 
@@ -52,6 +65,7 @@ function plotMandelbrot(canvas, centerX, centerY, zoom){
     var sizeY = $(canvas).height();
     var ctx = canvas.getContext('2d');
     var x, y;
+    $("#info").append( "<BR>(x -  "  + centerX + " )/( " + sizeX + " * " + zoom + ")" );
     for(x= 1; x< sizeX; x+=1){
 	for(y= 1; y< sizeY ; y+=1){
 	    mbPixel(x,y,
