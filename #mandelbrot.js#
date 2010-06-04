@@ -105,6 +105,7 @@ function newMb(canvas){
 	    startX = (startX == null) ? centerX : startX;
 	    startY = (startY == null) ? centerY : startY;
 	    
+	    //OK So the formula(S) below should really be simplified algibreicly 
 	    offsetX = (startX -newX + (sizeX/2));
 	    offsetY = (startY -newY + (sizeY/2));
 	    offsetX = (offsetX*newZoom/zoom) - (sizeX*(newZoom-zoom)/(2*zoom));

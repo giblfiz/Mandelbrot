@@ -1,11 +1,11 @@
-1) Unit tests? I'm not entirely sure how to do this
-2) nicer colors
-3) Multi-pass drawing for greater responsiveness (could do odd/even or many other things)
+1) Unit tests? I'm not entirely sure how to do this  !!ha ha, I can look at specific pixels!
+*2) nicer colors ... (Some work done... looks like it will depend on bigInt to look right)
+3) Multi-pass drawing for greater responsiveness (could do odd/even or many other things, how do you flush to canvas anyway?)
 4) Use canvas for quick-scaling and quick-movement
-5) make movement "dragable" rather than clickable
-6) Use BigInt library so its faster
+5) make movement "dragable" rather than clickable (mandelbrot math code is now in place for this)
+6) Use BigInt library so it's able to go deeper 
 7) REFACTOR!!! 
-  --Clear out globals
+      DONE  --Clear out globals
   --Clean up formulas
   --JS lint
   --use a closure for color interpreter
