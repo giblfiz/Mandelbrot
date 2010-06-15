@@ -4,14 +4,20 @@
 </head>
 <body>
 <H1>Interactive Mandlebrot Set Visualization</H1>
+<b>Source avalible at github </b><br/>
+<a href="http://github.com/giblfiz/Mandelbrot">http://github.com/giblfiz/Mandelbrot</a> <br/>
 
-<canvas id="canvas" width="180" height="180"></canvas>
-<input type="button" value="zoom2x" id="zoom2x" />
-<input type="button" value="zoom1p" id="zoom1p" />
+<p>click on the picture to re-center on your mouse. Click Zoom to zoom in. All the interesting bits live near the edges</p><br/> 
+
+
+<canvas id="canvas" width="180" height="180">You need a Modern browser to view this page. Try Chrome, Firefox 3.x or Opera</canvas>
+<input type="button" value="zoom2x" id="zoom2x" /><br/>
+<input type="button" value="zoom1p" id="zoom1p" /><br/>
+<input type="button" value="Speed Test" id="speedTest" />
 <p id="info"></p>
 
-<script type="text/javascript" src="/jquery.min.js"></script>
-<script type="text/javascript" src="/mandelbrot.js"></script>
-
+<script type="text/javascript" src="jquery.min.js"></script>
+<script type="text/javascript" src="mandelbrot.js"></script>
+<script type="text/javascript" src="mandelbrot_interface.js"></script>
 <body>
 </html>

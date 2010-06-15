@@ -1,37 +1,15 @@
-$(document).ready(function(){
-    var canvas = document.getElementById("canvas");
-    if(!canvas.getContext){
-	alert("Browser does not support Canvas");
-    }
-    mb = newMb(canvas); 
-    mb.draw();
-
-    $("#zoom2x").click(function(event){
-	mb.zoom(2);
-    });
-
-    $("#zoom1p").click(function(event){
-	mb.addZoom(1);
-    });
-
-    $(canvas).click(function(event){
-	var relX, relY
-	relX =  event.pageX - $(event.target).offset().left;
-	relY = event.pageY - $(event.target).offset().top;
-	mb.move(relX, relY, 1.3);
-    })
-
-})
 
 function newMb(canvas){
     //private Variables
-    var maxIttr = 400;
+    var maxIttr = 210;
     var ctx = canvas.getContext('2d');
     var zoom = .8;
     var sizeX = $(canvas).width();
     var sizeY = $(canvas).height();
     var centerX = sizeX / 2;
     var centerY = sizeY / 2;
+    var drawToCanvas = true;
+    var useMbAlgo = true;
 
 
     //private functions
@@ -46,18 +24,18 @@ function newMb(canvas){
     }
 
     var _colorPicker =  function(depth){
-	    if(depth < 0){
-		//this should never happen, but may fail quitely without causing problems
-		ctx.fillStyle= "rgb(0,0,0)";
-	    } else if (depth >= maxIttr) {
-		ctx.fillStyle= "rgb(0,100,0)";
-	    } else if (depth < 255) {
-		ctx.fillStyle= "rgb(0,0,"+ parseInt(depth) + ")";
-	    } else if (depth < 450) {
-		ctx.fillStyle= "rgb("+ parseInt(depth - 255) + ",0,255)";
-	    }
-	    return(ctx);
-	} //close colorPicker
+	if(depth < 0){
+	    //this should never happen, but may fail quitely without causing problems
+	    ctx.fillStyle= "rgb(0,0,0)";
+	} else if (depth >= maxIttr) {
+	    ctx.fillStyle= "rgb(0,100,0)";
+	} else if (depth < 125) {
+	    ctx.fillStyle= "rgb(0,0,"+ parseInt(depth*2) + ")";
+	} else if (depth < 250) {
+	    ctx.fillStyle= "rgb("+ parseInt((depth*2) - 255) + ",0,255)";
+	}
+	return(ctx);
+    } //close colorPicker
 
     var _getDepth =  function(rawX,rawY){
 	    var xStart = _offset(rawX,"x");
@@ -66,7 +44,7 @@ function newMb(canvas){
 	    //there is some scaling math that should probably be rolled into this
 	    var ittr, x, y, nextX;
 	    ittr = x = y = nextX = 0;
-	    while ( x*x + y*y <= (2*2)  &&  ittr < maxIttr ) 
+	    while ( x*x + y*y <= 4  &&  ittr < maxIttr ) 
 	    {
 		nextX = x*x - y*y + xStart;
 		y = 2*x*y + yStart;
@@ -88,7 +66,13 @@ function newMb(canvas){
 	    var x, y;
 	    for(x= 1; x< sizeX; x+=1){
 		for(y= 1; y< sizeY ; y+=1){
-		    _colorPicker(_getDepth(x,y)).fillRect(x,y,1,1);
+		    if(drawToCanvas && useMbAlgo){
+			_colorPicker(_getDepth(x,y)).fillRect(x,y,1,1);
+		    } else if (useMbAlgo) {
+			_getDepth(x,y);
+		    } else if (drawToCanvas) {
+			_colorPicker(ctx).fillRect(x,y,1,1);
+		    }
 		}
 	    }
 	},//close draw
@@ -96,6 +80,14 @@ function newMb(canvas){
 	"redDot":function(x,y){
 	    ctx.fillStyle= "rgb(255,0,0)";
 	    ctx.fillRect(x,y,2,2);
+	},
+
+	"setDrawToCanvas":function(newVal){
+	    drawToCanvas = newVal;
+	},
+
+	"setUseMbAlgo":function(newVal){
+	    useMbAlgo = newVal;
 	},
 	
 	"move": function(newX, newY, zoomMultiplier, startX, startY){
@@ -105,6 +97,7 @@ function newMb(canvas){
 	    startX = (startX == null) ? centerX : startX;
 	    startY = (startY == null) ? centerY : startY;
 	    
+	    //OK So the formula(S) below should really be simplified algibreicly 
 	    offsetX = (startX -newX + (sizeX/2));
 	    offsetY = (startY -newY + (sizeY/2));
 	    offsetX = (offsetX*newZoom/zoom) - (sizeX*(newZoom-zoom)/(2*zoom));
@@ -132,17 +125,3 @@ function newMb(canvas){
     
 }
 
-
-
-/*
-//********************************************************
-//I ask myself... What do I want this code to look like?
-mb = newMB(canvas, maxItter); //ok I like it,  be sure to set a default maxItter
-mb.draw(x,y,zoom); //like it as well, set a default for x, y and zoom? (default zoom should be oldZoom, fallthrough to 1
-mb.setZoom(zoom); //sets zoom absolutely
-mb.zoom(multiplier); // calls setZoom(oldZoom * multiplier);
-mb.move(x,y); //From is assumed to be the center
-mb.moveFromTo(fromX,fromY,toX,toY);  //not so sure about this one
-//********************************************************
-
-*/
