@@ -92,6 +92,23 @@ function newMb(canvas){
 
     // The object below 
     return({
+	drawFromKeyString: function(keyString){
+	    var parts = keyString.split('&');
+	    parts[0] = parseFloat(parts[0]);
+	    parts[1] = parseFloat(parts[1]);
+	    parts[2] = parseFloat(parts[2]);
+
+	    if (typeof(parts[0]) == typeof(parts[1]) &&  
+		typeof(parts[2]) == typeof(parts[1]) &&
+		'number' == typeof(parts[1]) ){
+
+		this.draw(parts[0], parts[1], parts[2])
+	    } else {
+		throw { message: "Invalid KeyString passed to drawFromKeyString, some of it's parts are not numbers ",
+			name: "badInput"};	    
+	    }
+	},
+	
 	getKeyString : function(base){
 	    base = isNaN(base) ? 10 : base;
 	    if(useBigDec){

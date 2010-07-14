@@ -8,14 +8,13 @@ $(document).ready(function(){
     
     //If it has a pre-set location, visit it
     var url =  window.location.toString();
-    var anchor, parts;
+    var anchor;
     if(url.match('#')){
 	anchor = url.split('#')[1];
-	parts = anchor.split('&');
-	mb.draw(parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2]))
+	mb.drawFromKeyString(anchor);
+    } else {
+	mb.draw();
     }
-
-    mb.draw();
 
     $("#zoom2x").click(function(event){
 	mb.zoom(2);
