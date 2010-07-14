@@ -1,17 +1,30 @@
 $(document).ready(function(){
+    var anchorBase = 10;
     var canvas = document.getElementById("canvas");
     if(!canvas.getContext){
 	alert("Browser does not support Canvas");
     }
     mb = newMb(canvas); 
+    
+    //If it has a pre-set location, visit it
+    var url =  window.location.toString();
+    var anchor, parts;
+    if(url.match('#')){
+	anchor = url.split('#')[1];
+	parts = anchor.split('&');
+	mb.draw(parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2]))
+    }
+
     mb.draw();
 
     $("#zoom2x").click(function(event){
 	mb.zoom(2);
+	window.location.hash = mb.getKeyString(anchorBase);
     });
 
     $("#zoom1p").click(function(event){
 	mb.addZoom(1);
+	window.location.hash = mb.getKeyString(anchorBase);
     });
 
     $("#speedTest").click(function(event){
@@ -59,6 +72,7 @@ $(document).ready(function(){
 	relX =  event.pageX - $(event.target).offset().left;
 	relY = event.pageY - $(event.target).offset().top;
 	mb.move(relX, relY, 1.3);
+	window.location.hash = mb.getKeyString(anchorBase);
     })
 
 })

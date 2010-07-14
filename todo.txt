@@ -9,5 +9,5 @@
   --Clean up formulas
   --JS lint
   --use a closure for color interpreter
-8) make zoom&pan set and respect anchor tags (so views can be bookmarked)
+8) DONE  make zoom&pan set and respect anchor tags (so views can be bookmarked)
 9) tune for speed

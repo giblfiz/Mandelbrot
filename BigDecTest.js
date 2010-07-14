@@ -153,5 +153,318 @@ var BigDecTest = new YAHOO.tool.TestCase({
 	Assert.isTrue(bigDec(-1).over(3).eq(bigDec(-2).over(6)) );
     },
 
+    testCloning: function(){
+	var thirty;
+	thirty = bigDec(30);
+	Assert.isTrue(bigDec(thirty).plus(3).eq(33));
+	Assert.isTrue(thirty.eq(30));
+    },
+
+    testLTEforLargeNumbers: function(){
+	Assert.isTrue(bigDec(100).plus(3).over(50).plus(26).over(24).times(1000).over(1000).lte(4));
+    },
+
+    testSetNumirator: function(){
+	Assert.isTrue(bigDec(1).setNumirator(4).eq(4));
+	Assert.isTrue(bigDec(.1).setNumirator(4).eq(.4));
+	Assert.isTrue(bigDec(-1).setNumirator(4).eq(-4));
+	Assert.isTrue(bigDec(-1).setNumirator(-4).eq(4));
+	var exThrown;
+
+
+	exThrown = false;
+	try{
+	    bigDec(-1).setNumirator("five");
+	} catch (ex){
+	    if (ex.name == "wrongType"){
+		exThrown = true;
+	    }
+	}
+	Assert.isTrue(exThrown);
+
+
+	exThrown = false;
+	try{
+	    bigDec(-1).setNumirator(73.2);
+	} catch (ex){
+	    if (ex.name == "wrongType"){
+		exThrown = true;
+	    }
+	}
+	Assert.isTrue(exThrown);
+
+
+},
+
+
+    testSetDenominator: function(){
+	Assert.isTrue(bigDec(1).setDenominator(100).eq(.01));
+	Assert.isTrue(bigDec(10).setDenominator(5).eq(2));
+	Assert.isTrue(bigDec(10).setDenominator(-5).eq(-2));
+	Assert.isTrue(bigDec(-1).setDenominator(-4).eq(.25));
+	var exThrown;
+
+
+	exThrown = false;
+	try{
+	    bigDec(-1).setDenominator("five");
+	} catch (ex){
+	    if (ex.name == "wrongType"){
+		exThrown = true;
+	    }
+	}
+	Assert.isTrue(exThrown);
+
+
+	exThrown = false;
+	try{
+	    bigDec(-1).setDenominator(73.2);
+	} catch (ex){
+	    if (ex.name == "wrongType"){
+		exThrown = true;
+	    }
+	}
+	Assert.isTrue(exThrown);
+
+
+},
+    
+
+    testManuallyConstructedNumbers: function(){
+	Assert.isTrue(bigDec(1).setNumirator(500).setDenominator(200).eq(2.5));
+    },
+
+    testFailureFromMandelbrot: function(){
+	Assert.isTrue(bigDec(1).setNumirator(1236456845654182337045331968000000000000000000).setDenominator(93542383581052893114463682560000000000000000).gte(4));
+//	Assert.isTrue(bigDec(1).setNumirator(1236456845654182337045331968000000000000000000).setDenominator(93542383581052893114463682560000000000000000).lt(13.3));
+    },
+
+
+    testManuallyConstructedNumbers: function(){
+	Assert.isTrue(bigDec(1).setNumirator(500).setDenominator(200).eq(2.5));
+    },
+
+    testSubtraction: function(){
+	Assert.isTrue(bigDec(100).minus(50).eq(50));
+	Assert.isTrue(bigDec(100).plus(-50).eq(50));
+    },
+
+    testCompression: function(){
+	var saved = bigDec(9).setNumirator(5000).setDenominator(100);
+	saved.compress();
+	Assert.isTrue(saved.eq(50));
+
+
+	Assert.isTrue(bigDec(900).times(.01).plus(1).compress().eq(10));
+	Assert.isTrue(bigDec(9).compress().eq(9));
+	Assert.isTrue(bigDec(900).times(.001).compress().eq(.9));
+	Assert.isTrue(bigDec(90).times(.002).compress().eq(.18));
+	Assert.isTrue(bigDec(9).setNumirator(5).setDenominator(10).compress().eq(.5));
+
+
+	Assert.isTrue(bigDec(0).plus(.5).compress().eq(.5));
+
+    },
+
+
+    mbFormulaLarge: function(v){
+
+	v.lt4check = bigDec(v.x).times(v.x).plus(bigDec(v.y).times(v.y));
+	if (v.print) { 
+	    $("#body").append("<HR>"); 
+	    $("#body").append( "Large LT4 check:" + v.lt4check.print());
+	}
+
+	v.nextX = bigDec(v.x).times(v.x).minus(bigDec(v.y).times(v.y)).plus(v.xStart);
+
+	if (v.print) { 
+	    $("#body").append("<BR>");
+	    $("#body").append("Large nextX:" + v.nextX.print());
+	}
+
+	v.y = bigDec(2).times(v.x).times(v.y).plus(v.yStart);
+	if (v.print) { 
+	    $("#body").append("<BR>");
+	    $("#body").append("Large Y" + v.y.print());
+	}
+
+	v.x = v.nextX;
+	
+
+	return(v);
+    },
+
+
+
+    testMandelbrotFormulas: function(){
+	var sx, sy, snextX, sxStart, syStart;
+	sxStart = .5;
+	syStart = .5;
+	sy = sx = snextX = 0;
+
+	var v = {
+	    xStart : bigDec(sxStart),
+	    yStart : bigDec(syStart),
+	    x : bigDec(0),
+	    y : bigDec(0),
+	    nextX : bigDec(0),
+	    lt4check : bigDec(0),
+	    print : 1,
+	};
+
+	this.mbFormulaLarge(v);
+	$("#body").append( "<br> compressing x: " + v.x.print());	
+//	v.x.compress();
+	$("#body").append( " to x: " + v.x.print());	
+
+	var pt5 = bigDec(9).setNumirator(5).setDenominator(10);
+	$("#body").append( "<br> compressing pt5: " + pt5.print());	
+//	pt5.compress();
+	$("#body").append( " to pt5: " + pt5.print());	
+	if(pt5.eq(.5)){ 
+	    $("#body").append( " eq .5"); 
+	} else {
+	    $("#body").append( " neq .5"); 
+	}
+
+	$("#body").append( " to pt5: " + pt5.print());	
+	if(pt5.eq(.6)){ 
+	    $("#body").append( " eq .6"); 
+	} else {
+	    $("#body").append( " neq .6"); 
+	}
+
+//	v.y.compress();
+
+
+	this.mbFormulaLarge(v);
+	this.mbFormulaLarge(v);
+	this.mbFormulaLarge(v);
+	this.mbFormulaLarge(v);
+	this.mbFormulaLarge(v);
+
+
+/*
+	$("#body").append("<BR>");
+	$("#body").append(((sx*sx)+(sy*sy)) + " vs " + bigDec(x).times(x).plus(bigDec(y).times(y)).print());
+	Assert.isTrue( bigDec(x).times(x).plus(bigDec(y).times(y)).lte(4));
+
+	nextX = bigDec(x).times(x).minus(bigDec(y).times(y)).plus(xStart);
+	snextX = sx*sx - sy*sy + sxStart;
+	$("#body").append("<BR>");
+	$("#body").append("nextX   :: " + nextX.print() + " vs " + snextX);
+
+	y = bigDec(2).times(x).times(y).plus(yStart);
+	sy = 2*sx*sy + syStart;
+	$("#body").append("<BR>");
+	$("#body").append("Y   :: " + y.print() + " vs " + sy);
+
+	x = nextX;
+	sx = snextX;
+
+	/////////------------------------------------
+
+	$("#body").append("<BR>");
+	$("#body").append(((sx*sx)+(sy*sy)) + " vs " + bigDec(x).times(x).plus(bigDec(y).times(y)).print());
+	Assert.isTrue( bigDec(x).times(x).plus(bigDec(y).times(y)).lte(4));
+
+
+	nextX = bigDec(x).times(x).minus(bigDec(y).times(y)).plus(xStart);
+	snextX = sx*sx - sy*sy + sxStart;
+	$("#body").append("<BR>");
+	$("#body").append("squared X:"+bigDec(x).times(x).print()+" Y:"+bigDec(y).times(y).print());
+	$("#body").append("<BR>");
+	$("#body").append("small X:"+sx+" Y:"+sy+" xStart:"+sxStart);
+	$("#body").append("<BR>");
+	$("#body").append("large X:"+x.print()+" Y:"+y.print()+" xStart:"+xStart.print());
+	$("#body").append("<BR>");
+	$("#body").append("nextX   :: " + nextX.print() + " vs " + snextX);
+
+	y = bigDec(2).times(x).times(y).plus(yStart);
+	sy = 2*sx*sy + syStart;
+	$("#body").append("<BR>");
+	$("#body").append("Y   :: " + y.print() + " vs " + sy);
+
+	x = nextX;
+	sx = snextX;
+
+	/////////------------------------------------
+
+	$("#body").append("<BR>");
+	$("#body").append(((sx*sx)+(sy*sy)) + " vs " + bigDec(x).times(x).plus(bigDec(y).times(y)).print());
+	Assert.isTrue( bigDec(x).times(x).plus(bigDec(y).times(y)).lte(4));
+
+	nextX = bigDec(x).times(x).minus(bigDec(y).times(y)).plus(xStart);
+	y = bigDec(2).times(x).times(y).plus(yStart);
+	x = nextX;
+
+	snextX = sx*sx - sy*sy + sxStart;
+	sy = 2*sx*sy + syStart;
+	sx = snextX;
+
+	/////////------------------------------------
+
+	$("#body").append("<BR>");
+	$("#body").append(((sx*sx)+(sy*sy)) + " vs " + bigDec(x).times(x).plus(bigDec(y).times(y)).print());
+	Assert.isTrue( bigDec(x).times(x).plus(bigDec(y).times(y)).lte(4));
+
+	nextX = bigDec(x).times(x).minus(bigDec(y).times(y)).plus(xStart);
+	y = bigDec(2).times(x).times(y).plus(yStart);
+	x = nextX;
+
+	snextX = sx*sx - sy*sy + sxStart;
+	sy = 2*sx*sy + syStart;
+	sx = snextX;
+
+	/////////------------------------------------
+
+	$("#body").append("<BR>");
+	$("#body").append(((sx*sx)+(sy*sy)) + " vs " + bigDec(x).times(x).plus(bigDec(y).times(y)).print());
+	Assert.isTrue( bigDec(x).times(x).plus(bigDec(y).times(y)).lte(4));
+
+	nextX = bigDec(x).times(x).minus(bigDec(y).times(y)).plus(xStart);
+	y = bigDec(2).times(x).times(y).plus(yStart);
+	x = nextX;
+
+	snextX = sx*sx - sy*sy + sxStart;
+	sy = 2*sx*sy + syStart;
+	sx = snextX;
+
+	/////////------------------------------------
+
+	$("#body").append("<BR>");
+	$("#body").append(((sx*sx)+(sy*sy)) + " vs " + bigDec(x).times(x).plus(bigDec(y).times(y)).print());
+	Assert.isTrue( bigDec(x).times(x).plus(bigDec(y).times(y)).lte(4));
+
+	nextX = bigDec(x).times(x).minus(bigDec(y).times(y)).plus(xStart);
+	y = bigDec(2).times(x).times(y).plus(yStart);
+	x = nextX;
+
+	snextX = sx*sx - sy*sy + sxStart;
+	sy = 2*sx*sy + syStart;
+	sx = snextX;
+
+	/////////------------------------------------
+
+	$("#body").append("<BR>");
+	$("#body").append(((sx*sx)+(sy*sy)) + " vs " + bigDec(x).times(x).plus(bigDec(y).times(y)).print());
+	Assert.isTrue( bigDec(x).times(x).plus(bigDec(y).times(y)).lte(4));
+
+	nextX = bigDec(x).times(x).minus(bigDec(y).times(y)).plus(xStart);
+	y = bigDec(2).times(x).times(y).plus(yStart);
+	x = nextX;
+
+	snextX = sx*sx - sy*sy + sxStart;
+	sy = 2*sx*sy + syStart;
+	sx = snextX;
+
+	/////////------------------------------------
+
+	/////////------------------------------------
+
+*/
+    },
+
 
 });
+

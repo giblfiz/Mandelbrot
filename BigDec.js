@@ -59,7 +59,7 @@ function bigDec(rawVal){
 	input = _isABigDec(input) ? input : bigDec(input);
 	var inputIsNegitive = input.isNegitive();
 	if (subtraction){
-	    inputIsNegitive == !inputIsNegitive;
+	    inputIsNegitive = !inputIsNegitive;
 	}
 
 	if(_isNegitive == inputIsNegitive){
@@ -82,41 +82,73 @@ function bigDec(rawVal){
 
 
     if(_isABigDec(rawVal)){
-	return(rawVal);
-    } else {
-	if(typeof(rawVal) == "string"){
-	    if(parseFloat(rawVal) < 0 ){
-		_isNegitive = true;
-		_numerator = sub(int2bigInt(0,1,1), str2bigInt(rawVal.replace(".",""),10,1,1));
-	    } else {
-		_numerator = str2bigInt(rawVal.replace(".",""),10,1,1);
-	    }
-	    _denominator = int2bigInt(Math.pow(10,_getNumberOfDecimalPoints(rawVal)),1,1);
-	} else if (typeof(rawVal) == "number"){
-	    if(rawVal < 0){
-		_isNegitive = true;
-		rawVal *= -1;
-	    }
-	    _numerator = int2bigInt((rawVal * Math.pow(10, _getNumberOfDecimalPoints(rawVal))) ,1,1);
-	    _denominator = int2bigInt(Math.pow(10,_getNumberOfDecimalPoints(rawVal)),1,1);
-	} else if (typeof(rawVal) == "object"){
-	    //for the moment we are going to assume that any array we are passed 
-	    // is actually a bigInt. This will obviously go away once the bigInt lib is refactored
-	    if (negative(rawVal)){ throw RangeError ;}
-	    _numerator = rawVal;
-	    _denominator = int2bigInt(1,1,1);
+	_isNegitive = rawVal.isNegitive();
+	_numerator = rawVal.getNumerator();
+	_denominator = rawVal.getDenominator();
+//	return(rawVal);
+    } else if(typeof(rawVal) == "string"){
+	if(parseFloat(rawVal) < 0 ){
+	    _isNegitive = true;
+	    _numerator = sub(int2bigInt(0,1,1), str2bigInt(rawVal.replace(".",""),10,1,1));
+	} else {
+	    _numerator = str2bigInt(rawVal.replace(".",""),10,1,1);
 	}
+	_denominator = int2bigInt(Math.pow(10,_getNumberOfDecimalPoints(rawVal)),1,1);
+    } else if (typeof(rawVal) == "number"){
+	if(rawVal < 0){
+	    _isNegitive = true;
+	    rawVal *= -1;
+	}
+	_numerator = int2bigInt((rawVal * Math.pow(10, _getNumberOfDecimalPoints(rawVal))) ,1,1);
+	_denominator = int2bigInt(Math.pow(10,_getNumberOfDecimalPoints(rawVal)),1,1);
+    } else if (typeof(rawVal) == "object"){
+	//for the moment we are going to assume that any array we are passed 
+	// is actually a bigInt. This will obviously go away once the bigInt lib is refactored
+	if (negative(rawVal)){ throw RangeError ;}
+	_numerator = rawVal;
+	_denominator = int2bigInt(1,1,1);
+    }
 
 
-	return({
-	    isA:"bigDec",
-
+    return({
+	isA:"bigDec",
+	
 	    getNumerator: function(){
 		return(_numerator);
 	    },
 
 	    getDenominator: function(){
 		return(_denominator);
+	    },
+
+	    setNumirator: function(rawVal){
+		if (typeof(rawVal) == "number" && Math.floor(rawVal) == rawVal){
+		    if(rawVal < 0){
+			_isNegitive = !_isNegitive;
+			rawVal *= -1;
+		    }
+		    _numerator = int2bigInt(rawVal,1,1);
+		} else {
+		    throw { message: "only a numeric integer may be used to set the numirator, you used " + rawVal,
+			    name: "wrongType"};
+		}
+
+		return(this);
+	    },
+
+	    setDenominator: function(rawVal){
+		if (typeof(rawVal) == "number" && Math.floor(rawVal) == rawVal){
+		    if(rawVal < 0){
+			_isNegitive = !_isNegitive;
+			rawVal *= -1;
+		    }
+		    _denominator = int2bigInt(rawVal,1,1);
+		} else {
+		    throw { message: "only a numeric integer may be used to set the denominator, you used " + rawVal,
+			    name: "wrongType"};
+		}
+
+		return(this);
 	    },
 	    
 	    print: function(){
@@ -126,6 +158,10 @@ function bigDec(rawVal){
 
 	    eq:function(input){
 		input = _isABigDec(input) ? input : bigDec(input);
+		if ( isZero(input.getDenominator()) || isZero(_denominator)){ 		
+		    throw { message: "Denominator is zero, Comparisons will go poorly " + rawVal,
+			    name: "DivideByZero"};
+		};
 		var A = mult(_numerator, input.getDenominator());
 		var B = mult(_denominator, input.getNumerator());
 		return equals(A,B) ?  true : false;
@@ -133,6 +169,11 @@ function bigDec(rawVal){
 
 	    gt:function(input){
 		input = _isABigDec(input) ? input : bigDec(input);
+		if ( isZero(input.getDenominator()) || isZero(_denominator)){ 		
+		    throw { message: "Denominator is zero, Comparisons will go poorly " + rawVal,
+			    name: "DivideByZero"};
+		};
+
 		var A = mult(_numerator, input.getDenominator());
 		var B = mult(_denominator, input.getNumerator());
 		return greater(A,B) ? true: false;
@@ -140,6 +181,10 @@ function bigDec(rawVal){
 
 	    lt:function(input){
 		input = _isABigDec(input) ? input : bigDec(input);
+		if ( isZero(input.getDenominator()) || isZero(_denominator)){ 		
+		    throw { message: "Denominator is zero, Comparisons will go poorly " + rawVal,
+			    name: "DivideByZero"};
+		};
 		var A = mult(_numerator, input.getDenominator());
 		var B = mult(_denominator, input.getNumerator());
 		return greater(B,A) ? true: false;
@@ -147,6 +192,10 @@ function bigDec(rawVal){
 
 	    gte:function(input){
 		input = _isABigDec(input) ? input : bigDec(input);
+		if ( isZero(input.getDenominator()) || isZero(_denominator)){ 		
+		    throw { message: "Denominator is zero, Comparisons will go poorly " + rawVal,
+			    name: "DivideByZero"};
+		};
 		var A = mult(_numerator, input.getDenominator());
 		var B = mult(_denominator, input.getNumerator());
 		if(greater(A,B) || equals(A,B)){
@@ -158,6 +207,10 @@ function bigDec(rawVal){
 
 	    lte:function(input){
 		input = _isABigDec(input) ? input : bigDec(input);
+		if ( isZero(input.getDenominator()) || isZero(_denominator)){ 		
+		    throw { message: "Denominator is zero, Comparisons will go poorly " + rawVal,
+			    name: "DivideByZero"};
+		};
 		var A = mult(_numerator, input.getDenominator());
 		var B = mult(_denominator, input.getNumerator());
 		if(greater(B,A) || equals(B,A)){
@@ -209,8 +262,49 @@ function bigDec(rawVal){
 		return  _isNegitive;
 	    },
 
+	    compress: function(){
+		if(_numerator.length > _denominator.length){
+		    $("#body").append( " grow-D ");	
+		    _denominator = expand(_denominator, _numerator.length)
+		} else if (_numerator.length < _denominator.length){
+		    $("#body").append( " grow-N ");	
+		    _numerator = expand(_numerator, _denominator.length)
+		}
+
+		if(isZero(_numerator)){
+		    _denominator = int2bigInt(1,0,1);
+		}
+
+		var myGCD, newDenominator, newNumerator, numRemander, denomRemander;
+		newNumerator = int2bigInt(0,0,_numerator.length);
+		newDenominator = int2bigInt(0,0,_numerator.length);
+		numRemander = int2bigInt(0,0,_numerator.length);
+		denomRemander = int2bigInt(0,0,_numerator.length);
+		myGCD = GCD(_numerator, _denominator);
+//		$("#body").append( " GCD:" + bigInt2str(myGCD,10));	
+
+		myGCD = expand(myGCD, _numerator.length);
+
+		divide_(_numerator, myGCD, newNumerator, numRemander);
+/*		$("#body").append( "<BR/> _num:" + bigInt2str(_numerator,10) + 
+				   " GCD:" + bigInt2str(myGCD,10) + 
+				   " newNum:" + bigInt2str(newNumerator,10) + 
+				   " newRem:" + bigInt2str(numRemander,10)  );	*/
+		divide_(_denominator, myGCD, newDenominator, denomRemander);
+
+		if(!isZero(numRemander) || !isZero(denomRemander) ){
+		    throw { message: "Something has gone HORRIBLY wrong with compression ",
+			    name: "compressionFailure"};	    
+		}
+
+		_numerator = newNumerator;
+		_denominator = newDenominator;
+
+		return(this);
+	    },
+
+
 	    
 	});//close the bigDec clojure-"object"
-    }//close else for NOT is a big Dec
 
 };

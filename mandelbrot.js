@@ -1,25 +1,41 @@
-
 function newMb(canvas){
     //private Variables
     var maxIttr = 210;
+//    var maxIttr = 4;
     var ctx = canvas.getContext('2d');
-    var zoom = .8;
     var sizeX = $(canvas).width();
     var sizeY = $(canvas).height();
-    var centerX = sizeX / 2;
-    var centerY = sizeY / 2;
+    var zoom = .8;
+    var centerX = sizeX/2;
+    var centerY = sizeY/2;
     var drawToCanvas = true;
     var useMbAlgo = true;
+    var useBigDec = false;
+    var debug = true;
 
+
+    if(useBigDec){
+	var zoom = bigDec(.8);
+	var centerX = bigDec(sizeX).over(2);
+	var centerY = bigDec(sizeY).over(2);
+    }
 
     //private functions
     var _offset = function(num, axis){
 	if (axis !== "x" && axis !== "y"){
 	    throw new Error("offset Axis not recognized, was " + axis);
 	} else if (axis === "x"){
-	    return ((num - centerX)/(sizeX * zoom));
+	    if(useBigDec){
+		return (bigDec(num).minus(centerX).over(bigDec(sizeX).times(zoom)));
+	    } else {
+		return ((num - centerX)/(sizeX * zoom));
+	    }
 	} else {
-	    return ((num - centerY)/(sizeY * zoom));
+	    if(useBigDec){
+		return bigDec(num).minus(centerY).over(bigDec(sizeY).times(zoom));
+	    } else {
+		return ((num - centerY)/(sizeY * zoom));
+	    }
 	}
     }
 
@@ -44,20 +60,48 @@ function newMb(canvas){
 	    //there is some scaling math that should probably be rolled into this
 	    var ittr, x, y, nextX;
 	    ittr = x = y = nextX = 0;
-	    while ( x*x + y*y <= 4  &&  ittr < maxIttr ) 
-	    {
-		nextX = x*x - y*y + xStart;
-		y = 2*x*y + yStart;
-		x = nextX;
-		ittr +=1;
-	    }
-	    return ittr;
+	   if(useBigDec){
+	       x = bigDec(0);
+	       y = bigDec(0);
+	       nextX = bigDec(0);
+	       while ( bigDec(x).times(x).plus(bigDec(y).times(y)).lte(4)  &&  ittr < maxIttr ) {
+		   nextX = bigDec(x).times(x).minus(bigDec(y).times(y)).plus(xStart);
+		   y = bigDec(2).times(x).times(y).plus(yStart);
+		   x = nextX;
+		   ittr +=1;
+	       }
+	   } else {
+	       while ( x*x + y*y <= 4  &&  ittr < maxIttr ) {
+		   nextX = x*x - y*y + xStart;
+		   y = 2*x*y + yStart;
+		   x = nextX;
+		   ittr +=1;
+	       }
+	   }
+	if(debug && !useBigDec){ 
+//	    $("body").prepend("<br> itter: " + ittr + " yStart = " + yStart);
+	}
+	if(debug && useBigDec){
+	    $("body").prepend("<hr>" + ittr + " xStart = " + xStart.print() + " :: 4 >= " + bigDec(x).times(x).plus(bigDec(y).times(y)).print() );
+	    $("body").prepend("<br>" + ittr + " yStart = " + yStart.print());
+	}
+	return ittr;
 	}// close getDepth
 
 
 
     // The object below 
     return({
+	getKeyString : function(base){
+	    base = isNaN(base) ? 10 : base;
+	    if(useBigDec){
+		//think of a way to implement this...
+		return "";
+	    } else {
+		return(centerX.toString(base) + "&" + centerY.toString(base) + "&" + zoom.toString(base) );
+	    }
+	}, 
+
 	"draw": function(newX,newY,newZoom){
 	    centerX = newX == null ? centerX : newX;
 	    centerY = newY == null ? centerY : newY;
@@ -93,32 +137,67 @@ function newMb(canvas){
 	"move": function(newX, newY, zoomMultiplier, startX, startY){
 	    //if not passed a pair of start values, use the current center
 	    var newZoom
-	    newZoom = zoomMultiplier == null ? zoom : (zoomMultiplier*zoom);
+	    if(useBigDec){
+		newZoom = zoomMultiplier == null ? zoom : (bigDec(zoom).times(zoomMultiplier));
+	    } else {
+		newZoom = zoomMultiplier == null ? zoom : zoom*zoomMultiplier;
+	    }
+    
 	    startX = (startX == null) ? centerX : startX;
 	    startY = (startY == null) ? centerY : startY;
 	    
 	    //OK So the formula(S) below should really be simplified algibreicly 
-	    offsetX = (startX -newX + (sizeX/2));
-	    offsetY = (startY -newY + (sizeY/2));
-	    offsetX = (offsetX*newZoom/zoom) - (sizeX*(newZoom-zoom)/(2*zoom));
-	    offsetY = (offsetY*newZoom/zoom) - (sizeY*(newZoom -zoom)/(2*zoom));
+	    if(useBigDec){
+		offsetX = bigDec(startX).minus(newX).plus(bigDec(sizeX).over(2));
+		offsetY = bigDec(startY).minus(newY).plus(bigDec(sizeY).over(2));
 
+		offsetX = bigDec(offsetX).times(newZoom).over(zoom).minus(
+		    bigDec(sizeX).times(bigDec(newZoom).minus(zoom))
+			.over(bigDec(zoom).times(2)));
 
+		offsetY = bigDec(offsetY).times(newZoom).over(zoom).minus(
+		    bigDec(sizeY).times(bigDec(newZoom).minus(zoom))
+			.over(bigDec(zoom).times(2)));
+	    } else {
+		offsetX = (startX -newX + (sizeX/2));
+		offsetY = (startY -newY + (sizeY/2));
+		offsetX = (offsetX*newZoom/zoom) - (sizeX*(newZoom-zoom)/(2*zoom));
+		offsetY = (offsetY*newZoom/zoom) - (sizeY*(newZoom -zoom)/(2*zoom));
+	    }
 	    this.draw(offsetX,offsetY, newZoom);
 	}, //close move
 	
 	"setZoom": function(newZoom){
-	    offsetX = (centerX*newZoom/zoom) - (sizeX*(newZoom-zoom)/(2*zoom));
-	    offsetY = centerY*newZoom/zoom - (sizeY*(newZoom -zoom)/(2*zoom));
+	    if(useBigDec){
+		offsetX = bigDec(offsetX).times(newZoom).over(zoom).minus(
+		    bigDec(sizeX).times(bigDec(newZoom).minus(zoom))
+			.over(bigDec(zoom).times(2)));
+
+		offsetY = bigDec(offsetY).times(newZoom).over(zoom).minus(
+		    bigDec(sizeY).times(bigDec(newZoom).minus(zoom))
+			.over(bigDec(zoom).times(2)));
+	    } else {
+		offsetX = (centerX*newZoom/zoom) - (sizeX*(newZoom-zoom)/(2*zoom));
+		offsetY = centerY*newZoom/zoom - (sizeY*(newZoom -zoom)/(2*zoom));
+	    }
+
 	    this.draw(offsetX, offsetY, newZoom);
 	},
 
 	"zoom": function(zoomMultiplier){
-	    this.setZoom(zoom*zoomMultiplier);
+	    if(useBigDec){
+		this.setZoom(bigDec(zoom).times(zoomMultiplier));
+	    } else {
+		this.setZoom(zoom*zoomMultiplier);
+	    }
 	},
 
 	"addZoom": function(zoomAdder){
-	    this.setZoom(zoom+zoomAdder);
+	    if(useBigDec){
+		this.setZoom(bigDec(zoom).plus(zoomAdder));
+	    } else {
+		this.setZoom(zoomAdder + zoom);
+	    }
 	},
 
     }); // end "return"
