@@ -1,18 +1,18 @@
 function newMb(canvas){
     //private Variables
-    var maxIttr = 210;
-//    var maxIttr = 4;
-    var ctx = canvas.getContext('2d');
-    var sizeX = $(canvas).width();
+    var maxIttr = 210;  // This controls the color depth of the renders
+    var ctx = canvas.getContext('2d'); 
+    var sizeX = $(canvas).width(); 
     var sizeY = $(canvas).height();
-    var zoom = .8;
-    var centerX = sizeX / 2;
+    var zoom = .8;                //This is part of the starting zoom (and used as the current zoom)
+    var centerX = sizeX / 2;      // The Center of X & Y (starts off dead center
     var centerY = sizeY / 2;
-    var timeOutDur = 150; //in milliseconds
-    var drawToCanvas = true;
-    var useMbAlgo = true;
-    var useBigDec = false;
-    var debug = false;
+    var timeOutDur = 150;         // Max time in milliseconds between check-in with the browser. FF times out at ~6000
+                                  // Higher numbers render faster, lower numbers feel more interactive
+    var drawToCanvas = true;      // Actually draw the results. This is turned off for some testing functions
+    var useMbAlgo = true;         // Actually compute the pixel depth. This is turned off for some testing functions
+    var useBigDec = false;        // use the Big Decimal library, allowing for infinate depth at the cost of _much_ slower performance
+    var debug = false;            // output debug information
 
 
     if(useBigDec){
@@ -25,7 +25,6 @@ function newMb(canvas){
 
     var _v = {
 	pixSize : null,
-	d: null,
 	startTime: null,
 	x: 1,
 	y: 1,
@@ -34,59 +33,31 @@ function newMb(canvas){
   }	
 
     var _drawInternals = function(){
+	var d;
+
 	if(debug){ 
 	    $("body").append("<br> Draw Internals running with pixSize: " + _v.pixSize);
 	    $("body").append("<br>  centerY = " + centerY);
 	}
 
-//	var x, y, xClean, yClean;
-
-/*	var _chunkWhile = function(){
-	    if(x < sizeX){
-		for(y= 1; y< sizeY ; y+= _v.pixSize){
-		    xClean = ((x-1)/(_v.pixSize*2));
-		    yClean = ((y-1)/(_v.pixSize*2));
-		    if(xClean.floor !== xClean && yClean.floor !== yClean){
-			if(drawToCanvas && useMbAlgo){
-			    _colorPicker(_getDepth(x,y)).fillRect(x,y,32,32);
-			} else if (useMbAlgo) {
-			_getDepth(x,y);
-			} else if (drawToCanvas) {
-			    _colorPicker(ctx).fillRect(x,y,_v.pixSize, _v.pixSize);
-			}
-		    }
-		} //close the Y Loop
-		x+=_v.pixSize;
-		window.setTimeout(_chunkWhile,0);
-	    }
-
-	}
-*/
 	if (_v.pixSize >= 1){
-//	    _chunkWhile();
-//_v.startTime + timeOutDur > _v.d.getTime()
-
-	    for(noOp = 1; _v.x< sizeX; _v.x+=_v.pixSize){
-		for(noOp= 1; _v.y< sizeY ; _v.y+= _v.pixSize){
+	    for(; _v.x< sizeX; _v.x+=_v.pixSize){
+		for(; _v.y< sizeY ; _v.y+= _v.pixSize){
 		    _v.xClean = ((_v.x-1)/(_v.pixSize*2));
 		    _v.yClean = ((_v.y-1)/(_v.pixSize*2));
 		    if(_v.xClean.floor !== _v.xClean && _v.yClean.floor !== _v.yClean){
 			if(drawToCanvas && useMbAlgo){
-//			    _colorPicker(ctx).fillRect(_v.x,_v.y,_v.pixSize, _v.pixSize);
-			    _colorPicker(_getDepth(_v.x,_v.y)).fillRect(_v.x,_v.y,32,32);
+			    _colorPicker(_getDepth(_v.x,_v.y)).fillRect(_v.x,_v.y,_v.pixSize , _v.pixSize);
 			} else if (useMbAlgo) {
-			_getDepth(_v.x,_v.y);
+			    _getDepth(_v.x,_v.y);
 			} else if (drawToCanvas) {
-			 //   _colorPicker(_getDepth(_v.x,_v.y)).fillRect(_v.x,_v.y,32,32);
 			    _colorPicker(ctx).fillRect(_v.x,_v.y,_v.pixSize, _v.pixSize);
 			}
 		    }
-		    if(debug){ 
-			$("body").append("<br>Timing Breaker: " + (_v.startTime + timeOutDur) + " < " + _v.d.getTime());
-		    }
-		    _v.d = new Date;
-		    if((_v.startTime + timeOutDur) < _v.d.getTime()){
-			_v.startTime = _v.d.getTime();
+
+		    d = new Date;
+		    if((_v.startTime + timeOutDur) < d.getTime()){
+			_v.startTime = d.getTime();
 			window.setTimeout(_drawInternals, 0);
 			if(debug){ 
 			    $("body").append("<br>Loop-booted due to time");
@@ -203,29 +174,17 @@ function newMb(canvas){
 	}, 
 
 	"draw": function(newX,newY,newZoom){
+	    var d = new Date();
+
 	    centerX = newX == null ? centerX : newX;
 	    centerY = newY == null ? centerY : newY;
 	    zoom = newZoom == null ? zoom : newZoom;
 
-	    var x, y, pixSize, xClean, yClean, d, startTime;
 	    _v.pixSize = 32;
-	    _v.d = new Date();
-	    _v.startTime = _v.d.getTime();
+	    _v.startTime = d.getTime();
 	    _v.x = 1;
 	    _v.y = 1;
 	    window.setTimeout(_drawInternals, 0);
-/*	    for(x= 1; x< sizeX; x+=1){
-		for(y= 1; y< sizeY ; y+=1){
-		    if(drawToCanvas && useMbAlgo){
-			_colorPicker(_getDepth(x,y)).fillRect(x,y,1,1);
-		    } else if (useMbAlgo) {
-			_getDepth(x,y);
-		    } else if (drawToCanvas) {
-			_colorPicker(ctx).fillRect(x,y,1,1);
-		    }
-		}
-	    }
-*/
 	},//close draw
 
 	"redDot":function(x,y){

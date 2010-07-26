@@ -21,6 +21,11 @@ $(document).ready(function(){
 	window.location.hash = mb.getKeyString(anchorBase);
     });
 
+    $("#zoomOut").click(function(event){
+	mb.zoom(.25);
+	window.location.hash = mb.getKeyString(anchorBase);
+    });
+
     $("#zoom1p").click(function(event){
 	mb.addZoom(1);
 	window.location.hash = mb.getKeyString(anchorBase);
