@@ -1,10 +1,10 @@
-function newMb(canvas){
+  function newMb(canvas){
     //private Variables
     var maxIttr = 210;  // This controls the color depth of the renders
     var ctx = canvas.getContext('2d'); 
     var sizeX = $(canvas).width(); 
     var sizeY = $(canvas).height();
-    var zoom = .8;                //This is part of the starting zoom (and used as the current zoom)
+    var zoom = 0.8;                //This is part of the starting zoom (and used as the current zoom)
     var centerX = sizeX / 2;      // The Center of X & Y (starts off dead center
     var centerY = sizeY / 2;
     var timeOutDur = 150;         // Max time in milliseconds between check-in with the browser. FF times out at ~6000
@@ -12,70 +12,107 @@ function newMb(canvas){
     var drawToCanvas = true;      // Actually draw the results. This is turned off for some testing functions
     var useMbAlgo = true;         // Actually compute the pixel depth. This is turned off for some testing functions
     var useBigDec = false;        // use the Big Decimal library, allowing for infinate depth at the cost of _much_ slower performance
-    var debug = false;            // output debug information
+    var debug = true;            // output debug information
 
 
+    // These variables are used as part of the _drawInternals function, They would be local, 
+    // But the function interupts itself frequently, and needs it's variables stored externally
+    // So it knows where to pick up when restarted. 
+    var _v = { 
+	pixSize : null,    //current pixel size for this itteration
+	startTime: null,   //The time this pass started running, used to track timeOut
+	x: 1,              //current x pixel
+	y: 1,              //current y pixel
+	xClean: null,      //current x pixel with loaction adjusted for pixSize
+	yClean: null      //current y pixel with loaction adjusted for pixSize
+    };	
+
+
+    //if we are using bigDec, this variables need to be bigDecs and not regular floats
     if(useBigDec){
-	var zoom = bigDec(.8);
-	var centerX = bigDec(sizeX).over(2);
-	var centerY = bigDec(sizeY).over(2);
+	 zoom = bigDec(0.8);
+	 centerX = bigDec(sizeX).over(2);
+	 centerY = bigDec(sizeY).over(2);
     }
 
-    //private functions
+    //!!!!!!!!!!!!!!   Private Functions   !!!!!!!!!!!!!!!!!!
 
-    var _v = {
-	pixSize : null,
-	startTime: null,
-	x: 1,
-	y: 1,
-	xClean: null,
-	yClean: null,
-  }	
 
-    var _drawInternals = function(){
-	var d;
+    //**********************************************************************
+    //_drawInternals is the workhorse of this object. It itterates through 
+    // each of the pixels in the canvas and generates the correct color for them
+    // There are two particularly novel features of this function: large pass & Chunking
+    //
+    // Large Pass:
+    // Rather than simply itterating through each pixel in the expected order
+    // the function loops through the pixels in steps of "pixel Size" (currently starts at 32)
+    // which it draws in as huge pixels, and then returns itterating through again with 
+    // pixels that are half as big, and skipping pixels that have already been drawn.
+    // this causes a rough version of the set to be displayed quite quickly and as further
+    // itterations occur the unblurring effect occurs, finally resulting in a clean display
+    //
+    // Chunking:
+    // Rather than being called directly from draw _drawInternals is called by window.setTimeout
+    // further, after each pixel is drawn, it checks the elapsed time and if more than timeOutDur
+    // has gone by drawInternals pushes a new copy of itself onto the setTimeout Que and
+    // shuts itself down. This is useful because these breaks in the application execution
+    // give the browser a chance to interrupt the string of events, and prevent the
+    // script from being flagged as "Hanging"
+    //**********************************************************************
+    function _drawInternals(){
+	var d; //this is used to store a non-reusable date object
 
 	if(debug){ 
 	    $("body").append("<br> Draw Internals running with pixSize: " + _v.pixSize);
 	    $("body").append("<br>  centerY = " + centerY);
 	}
 
-	if (_v.pixSize >= 1){
-	    for(; _v.x< sizeX; _v.x+=_v.pixSize){
-		for(; _v.y< sizeY ; _v.y+= _v.pixSize){
-		    _v.xClean = ((_v.x-1)/(_v.pixSize*2));
-		    _v.yClean = ((_v.y-1)/(_v.pixSize*2));
-		    if(_v.xClean.floor !== _v.xClean && _v.yClean.floor !== _v.yClean){
+	if (_v.pixSize >= 1){ //we don't need to loop over anything smaller than single pixels
+	    while(_v.x< sizeX){
+		_v.xClean = ((_v.x-1)/(_v.pixSize*2)); //compute the x offset accounting for pix size
+
+		while( _v.y< sizeY){
+		    _v.yClean = ((_v.y-1)/(_v.pixSize*2)); // compute the y offset accounting for pix size
+
+		    if(_v.xClean.floor !== _v.xClean && _v.yClean.floor !== _v.yClean){ // check if this pix was drawn on previous pass
+
 			if(drawToCanvas && useMbAlgo){
+			    //This is the normal call to draw a pixel
+			    //_colorPicker returns the canvas, primed to draw in a color
+			    //_getDepth calculates itterations to determine if the pixel is in or out of set
+			    // which traditionally determines what color should be used. 
 			    _colorPicker(_getDepth(_v.x,_v.y)).fillRect(_v.x,_v.y,_v.pixSize , _v.pixSize);
 			} else if (useMbAlgo) {
-			    _getDepth(_v.x,_v.y);
+			    _getDepth(_v.x,_v.y); //used during "speed test", does not draw to canvas
 			} else if (drawToCanvas) {
-			    _colorPicker(ctx).fillRect(_v.x,_v.y,_v.pixSize, _v.pixSize);
+			    _colorPicker(ctx).fillRect(_v.x,_v.y,_v.pixSize, _v.pixSize); //used during speed test, no computation
 			}
 		    }
 
-		    d = new Date;
-		    if((_v.startTime + timeOutDur) < d.getTime()){
-			_v.startTime = d.getTime();
-			window.setTimeout(_drawInternals, 0);
+		    d = new Date();
+		    if((_v.startTime + timeOutDur) < d.getTime()){ //detect if timeout has occured.
+			_v.startTime = d.getTime(); //reset timeout counter
+			window.setTimeout(_drawInternals, 0); //push new copy of algo onto the que
 			if(debug){ 
 			    $("body").append("<br>Loop-booted due to time");
 			}
-			return;
+			return; //abort remaining loop executions. New Que item will pick up where we left off.
 		    }
 
+		    _v.y += _v.pixSize; //incriment the Y step
 		} //close the Y Loop
-		_v.y = 1;
+
+		_v.y = 1; //reset Y to start (not using for loops to make interacting with chunking easier)
+		_v.x += _v.pixSize; //incriment the X step
 	    } //close the X loop
-	    _v.x = 1;
-	    _v.pixSize = _v.pixSize /2;
-	    window.setTimeout(_drawInternals, 0);
-	}// close the block size loop
+	    _v.x = 1; 
+	    _v.pixSize = _v.pixSize /2; //move on to a smaller pixel size
+	    window.setTimeout(_drawInternals, 0); // give the browser a chance to act.
+	}// close the pix size loop
 	
     }
 
-    var _offset = function(num, axis){
+    function _offset(num, axis){
 	if (axis !== "x" && axis !== "y"){
 	    throw new Error("offset Axis not recognized, was " + axis);
 	} else if (axis === "x"){
@@ -93,16 +130,16 @@ function newMb(canvas){
 	}
     }
 
-    var _colorPicker =  function(depth){
+    function _colorPicker(depth){
 	if(depth < 0){
 	    //this should never happen, but may fail quitely without causing problems
 	    ctx.fillStyle= "rgb(0,0,0)";
 	} else if (depth >= maxIttr) {
 	    ctx.fillStyle= "rgb(0,100,0)";
 	} else if (depth < 125) {
-	    ctx.fillStyle= "rgb(0,0,"+ parseInt(depth*2) + ")";
+	    ctx.fillStyle= "rgb(0,0,"+ parseInt(depth*2, 10) + ")";
 	} else if (depth < 250) {
-	    ctx.fillStyle= "rgb("+ parseInt((depth*2) - 255) + ",0,255)";
+	    ctx.fillStyle= "rgb("+ parseInt((depth*2) - 255, 10) + ",0,255)";
 	}
 	return(ctx);
     } //close colorPicker
@@ -140,7 +177,7 @@ function newMb(canvas){
 	    $("body").prepend("<br>" + ittr + " yStart = " + yStart.print());
 	}
 	return ittr;
-	}// close getDepth
+	};// close getDepth
 
 
 
@@ -156,7 +193,7 @@ function newMb(canvas){
 		typeof(parts[2]) == typeof(parts[1]) &&
 		'number' == typeof(parts[1]) ){
 
-		this.draw(parts[0], parts[1], parts[2])
+		this.draw(parts[0], parts[1], parts[2]);
 	    } else {
 		throw { message: "Invalid KeyString passed to drawFromKeyString, some of it's parts are not numbers ",
 			name: "badInput"};	    
@@ -176,9 +213,18 @@ function newMb(canvas){
 	"draw": function(newX,newY,newZoom){
 	    var d = new Date();
 
-	    centerX = newX == null ? centerX : newX;
-	    centerY = newY == null ? centerY : newY;
-	    zoom = newZoom == null ? zoom : newZoom;
+	if(debug){ 
+	    $("body").append("<br>  pre-centerY = " + centerY);
+	    $("body").append("<br>  new Y = " + newY);
+	}
+
+	    centerX = !newX ? centerX : newX;
+	    centerY = !newY ? centerY : newY;
+	    zoom = !newZoom ? zoom : newZoom;
+
+	if(debug){ 
+	    $("body").append("<br>  post-centerY = " + centerY);
+	}
 
 	    _v.pixSize = 32;
 	    _v.startTime = d.getTime();
@@ -202,15 +248,15 @@ function newMb(canvas){
 	
 	"move": function(newX, newY, zoomMultiplier, startX, startY){
 	    //if not passed a pair of start values, use the current center
-	    var newZoom
+	    var newZoom, offsetX, offsetY;
 	    if(useBigDec){
-		newZoom = zoomMultiplier == null ? zoom : (bigDec(zoom).times(zoomMultiplier));
+		newZoom = zoomMultiplier === null ? zoom : (bigDec(zoom).times(zoomMultiplier));
 	    } else {
-		newZoom = zoomMultiplier == null ? zoom : zoom*zoomMultiplier;
+		newZoom = zoomMultiplier === null ? zoom : zoom*zoomMultiplier;
 	    }
     
-	    startX = (startX == null) ? centerX : startX;
-	    startY = (startY == null) ? centerY : startY;
+	    startX = (!startX) ? centerX : startX;
+	    startY = (!startY) ? centerY : startY;
 	    
 	    //OK So the formula(S) below should really be simplified algibreicly 
 	    if(useBigDec){
@@ -230,6 +276,13 @@ function newMb(canvas){
 		offsetX = (offsetX*newZoom/zoom) - (sizeX*(newZoom-zoom)/(2*zoom));
 		offsetY = (offsetY*newZoom/zoom) - (sizeY*(newZoom -zoom)/(2*zoom));
 	    }
+
+	if(debug){ 
+	    $("body").append("<br>  offsetY = " + offsetY);
+	    $("body").append("<br>  startY = " + startY);
+	    $("body").append("<br>  newY = " + newY);
+	    $("body").append("<br>  sizeY = " + sizeY);
+	}
 	    this.draw(offsetX,offsetY, newZoom);
 	}, //close move
 	
@@ -264,7 +317,7 @@ function newMb(canvas){
 	    } else {
 		this.setZoom(zoomAdder + zoom);
 	    }
-	},
+	}
 
     }); // end "return"
     
