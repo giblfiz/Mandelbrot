@@ -1,0 +1,33 @@
+<!--CSS-->
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.1/build/logger/assets/logger.css">
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.1/build/yuitest/assets/testlogger.css">
+ 
+<!-- Dependencies --> 
+<script src="http://yui.yahooapis.com/2.8.1/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+<script src="http://yui.yahooapis.com/2.8.1/build/logger/logger-min.js"></script>
+ 
+<!-- Source File -->
+<script src="http://yui.yahooapis.com/2.8.1/build/yuitest/yuitest-min.js"></script>
+
+<!--libraries to be tested-->
+<script src="BigDec2.js"></script>
+
+<!--actual test object-->
+<script src="BigDecTest2.js"></script>
+
+
+<!--RUN THE TESTS-->
+<script>
+YAHOO.tool.TestRunner.add(BigDecTest2);
+YAHOO.util.Event.onDOMReady(function(){
+  var logger = new YAHOO.tool.TestLogger("testLogger");
+  YAHOO.tool.TestRunner.run();
+});
+</script>
+
+<!-- Sidenode for utility -->
+<script type="text/javascript" src="jquery.min.js"></script>
+
+<body id="body">
+<h1>Big Decimal 2 Test</h1>
+</body>

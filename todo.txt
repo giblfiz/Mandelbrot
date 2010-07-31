@@ -1,6 +1,6 @@
 1) Unit tests? I'm not entirely sure how to do this  !!ha ha, I can look at specific pixels!
 *2) nicer colors ... (Some work done... looks like it will depend on bigInt to look right)
-3) Multi-pass drawing for greater responsiveness (could do odd/even or many other things, how do you flush to canvas anyway?)
+3) DONE!! Multi-pass drawing for greater responsiveness (could do odd/even or many other things, how do you flush to canvas anyway?)
 4) Use canvas for quick-scaling and quick-movement
 5) make movement "dragable" rather than clickable (mandelbrot math code is now in place for this)
 6) Use BigInt library so it's able to go deeper 
@@ -11,3 +11,6 @@
   --use a closure for color interpreter
 8) DONE  make zoom&pan set and respect anchor tags (so views can be bookmarked)
 9) tune for speed
+
+10) DONE!!  Chunk itterations so FF & other browsers don't hang
+11) Create the "video zoom out" effect
